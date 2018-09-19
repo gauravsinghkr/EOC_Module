@@ -10,7 +10,7 @@ import Eoc_Intraction
 import EOC_definition
 import sys
 import SQLScript
-from config import Config
+import Config
 
 
 if __name__ == '__main__':
