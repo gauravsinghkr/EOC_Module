@@ -3,10 +3,11 @@
 """
 SQL Script
 """
+
 import datetime
 import pandas as pd
 import cx_Oracle as OraCx
-from BiProper import Properties
+from EOC_Module.eoc.script.BiProper import Properties
 
 
 class SqlScript(Properties):

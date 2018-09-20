@@ -1,5 +1,5 @@
 # coding=utf-8
-# !/usr/bin/env python
+#!/usr/bin/env python
 
 from __future__ import print_function
 
@@ -12,6 +12,7 @@ import pandas.io.formats.excel
 pandas.io.formats.excel.header_style = None
 from functools import reduce
 from SQLScript import SqlScript
+from EOC_Module.eoc.script import config
 
 
 class Summary(object):
@@ -1361,7 +1362,9 @@ class Summary(object):
 if __name__ == "__main__":
     pass
 # enable it when running for individual file
-# c=config.Config('2018-03-19', 582127,'2018-05-27')
-# o=Summary(c)
-# o.main()
+ #c = config.Config('2018-03-19', 582127,'2018-05-27')
+ #o=Summary(c, SqlScript(c))
+ #o.main()
 # c.saveAndCloseWriter()
+
+
