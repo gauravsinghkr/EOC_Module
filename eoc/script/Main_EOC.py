@@ -5,10 +5,10 @@ This is main class running for all scripts
 """
 
 import sys
+"""
 import os
 home = os.path.dirname(sys.argv[0])
 sys.path.append(os.path.join(home, "EOC_Module/eoc/script"))
-
 import Eoc_Summary
 import Eoc_Daily
 import Eoc_Video
@@ -16,7 +16,6 @@ import Eoc_Intraction
 import EOC_definition
 import SQLScript
 from config import Config
-
 """
 from EOC_Module.eoc.script import Eoc_Summary
 from EOC_Module.eoc.script import Eoc_Daily
@@ -25,7 +24,7 @@ from EOC_Module.eoc.script import Eoc_Intraction
 from EOC_Module.eoc.script import EOC_definition
 from EOC_Module.eoc.script import SQLScript
 from EOC_Module.eoc.script.config import Config
-"""
+
 
 if __name__ == '__main__':
 
