@@ -9,7 +9,8 @@ import numpy as np
 from xlsxwriter.utility import xl_rowcol_to_cell, xl_range
 from functools import reduce
 import pandas.io.formats.excel
-from SQLScript import SqlScript
+from EOC_Module.eoc.script.SQLScript import SqlScript
+
 
 # desired_width = 320
 pd.set_option("display.max_columns", 10)
@@ -117,9 +118,9 @@ Class for VDX Placements
             choice_vwr_vcr_vdx_first = placement_vdx_summary_first['COMPLETIONS'] / placement_vdx_summary_first[
                 'IMPRESSIONS']
 
-            placement_vdx_summary_first['Viewer VCR'] = np.select(
-                [mask4 & mask_vdx_first_vwr_vcr, mask4 & mask_vdx_first],
-                [choice_vwr_vcr, choice_vwr_vcr_vdx_first], default='N/A')
+            placement_vdx_summary_first['Viewer VCR'] = np.select([mask4 & mask_vdx_first_vwr_vcr, mask4 & mask_vdx_first],
+                                                                  [choice_vwr_vcr, choice_vwr_vcr_vdx_first],
+                                                                  default='N/A')
             placement_vdx_summary_first['Viewer VCR'] = pd.to_numeric(placement_vdx_summary_first['Viewer VCR'],
                                                                       errors='coerce')
 
@@ -180,18 +181,41 @@ Class for VDX Placements
             placement_vdx_summary_first_new.loc[
                 placement_vdx_summary_first_new.index[-1], ["Viewer VCR", "Engager VCR"]] = np.nan
 
+
+            """ Below code is added/edited by Gaurav on 09/24/2018 to add metrics --
+            Impressions, Engagements, Clickthroughs, Video Completions
+            """
+
+            ## edited by Gaurav - start
+            placement_vdx_summary_first_new['Clickthroughs'] = np.select([mask4, mask2 & mask5, mask1 & mask5],
+                                                                         [placement_vdx_summary_first['VWRCLICKTHROUGH'],
+                                                                         placement_vdx_summary_first["ENGCLICKTHROUGH"],
+                                                                         placement_vdx_summary_first["DPECLICKTHROUGH"]], default=0)
+
+            placement_vdx_summary_first_new['Video Completions'] = np.select([mask5 & mask6, mask5 & mask7, mask5 & mask8,
+                                                                              mask4 & mask_vdx_first_vwr_vcr, mask4 & mask_vdx_first],
+                                                                             [placement_vdx_summary_first['ENG100'],
+                                                                              placement_vdx_summary_first['DPE100'],
+                                                                              placement_vdx_summary_first['COMPLETIONS'],
+                                                                              placement_vdx_summary_first['VIEW100'],
+                                                                              placement_vdx_summary_first['COMPLETIONS']
+                                                                             ])
+
             placement_summary_final_new = placement_vdx_summary_first_new.loc[:,
-                                          ["Placement# Name", "PRODUCT", "Engagements Rate", "Viewer CTR",
-                                           "Engager CTR", "Viewer VCR", "Engager VCR",
+                                          ["Placement# Name", "PRODUCT", "IMPRESSIONS", "ENGAGEMENTS","Engagements Rate", "Clickthroughs"
+                                            "Viewer CTR", "Engager CTR", "Video Completions", "Viewer VCR", "Engager VCR",
                                            "Interaction Rate", "Active Time Spent"]]
 
             placement_summary_final = placement_summary_final_new.loc[:,
-                                      ["Placement# Name", "PRODUCT", "Engagements Rate",
-                                       "Viewer CTR", "Engager CTR", "Viewer VCR",
+                                      ["Placement# Name", "PRODUCT", "IMPRESSIONS", "ENGAGEMENTS", "Engagements Rate", "Clickthroughs",
+                                       "Viewer CTR", "Engager CTR", "Video Completions", "Viewer VCR",
                                        "Engager VCR", "Interaction Rate",
                                        "Active Time Spent"]]
 
+            ## edited by Gaurav - end
+
             self.placement_summary_final = placement_summary_final
+
 
     def access_vdx_adsize_columns(self):
 
@@ -777,9 +801,13 @@ Class for VDX Placements
                     write_pls = placement_df.to_excel(self.config.writer,
                                                       sheet_name="VDX Details".format(self.config.ioid),
                                                       startcol=1, startrow=startline_placement, columns=["PRODUCT",
+                                                                                                         "IMPRESSIONS",
+                                                                                                         "ENGAGEMENTS",
                                                                                                          "Engagements Rate",
+                                                                                                         "Clickthroughs",
                                                                                                          "Viewer CTR",
                                                                                                          "Engager CTR",
+                                                                                                         "Video Completions",
                                                                                                          "Viewer VCR",
                                                                                                          "Engager VCR",
                                                                                                          "Interaction Rate",
@@ -979,6 +1007,8 @@ Class for VDX Placements
             worksheet.write_string(2, 7, "Campaign Status")
             # worksheet.write_string(3, 1, "Agency Name")
             # worksheet.write_string(3, 7, "Currency")
+
+            format_num = workbook.add_format({"num_format": "#,##0"})
             number_cols_plc_summary = self.placement_summary_final.shape[1]
             number_cols_adsize = self.placement_adsize_final.shape[1]
             number_cols_video = self.placement_by_video_final.shape[1]
@@ -998,13 +1028,17 @@ Class for VDX Placements
                                    format_hearder_left)
 
             worksheet.write_string(8, 1, "Unit", format_hearder_left)
-            worksheet.write_string(8, 2, "Engagement Rate", format_hearder_right)
-            worksheet.write_string(8, 3, "Viewer CTR", format_hearder_right)
-            worksheet.write_string(8, 4, "Engager CTR", format_hearder_right)
-            worksheet.write_string(8, 5, "Viewer VCR (Primary Video)", format_hearder_right)
-            worksheet.write_string(8, 6, "Engager VCR (Primary Video)", format_hearder_right)
-            worksheet.write_string(8, 7, "Interaction Rate", format_hearder_right)
-            worksheet.write_string(8, 8, "Active Time Spent", format_hearder_right)
+            worksheet.write_string(8, 2, "Impressions", format_hearder_right)
+            worksheet.write_string(8, 3, "Engagements", format_hearder_right)
+            worksheet.write_string(8, 4, "Engagement Rate", format_hearder_right)
+            worksheet.write_string(8, 5, "Clickthroughs", format_hearder_right)
+            worksheet.write_string(8, 6, "Viewer CTR", format_hearder_right)
+            worksheet.write_string(8, 7, "Engager CTR", format_hearder_right)
+            worksheet.write_string(8, 8, "Video Completions", format_hearder_right    )
+            worksheet.write_string(8, 9, "Viewer VCR (Primary Video)", format_hearder_right)
+            worksheet.write_string(8, 10, "Engager VCR (Primary Video)", format_hearder_right)
+            worksheet.write_string(8, 11, "Interaction Rate", format_hearder_right)
+            worksheet.write_string(8, 12, "Active Time Spent", format_hearder_right)
             worksheet.conditional_format(7, 1, 7, number_cols_plc_summary - 1,
                                          {"type": "blanks", "format": format_colour})
 
@@ -1014,7 +1048,6 @@ Class for VDX Placements
 
             ats_format = workbook.add_format({"bg_color": '#A5A5A5', "bold": True})
 
-            format_num = workbook.add_format({"num_format": "#,##0"})
 
             worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1, 1,
                                    "Ad Size Breakdown",
@@ -1233,14 +1266,39 @@ Class for VDX Placements
                                              1],
                                          {"type": "blanks", "format": format_hearder_left})
 
+            """
             worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 1,
                                          9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
-                                         number_cols_plc_summary - 2,
-                                         {"type": "blanks", "format": grand_fmt})
+                                         number_cols_plc_summary - 2, {"type": "blanks", "format": grand_fmt})
 
             worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 1,
                                          9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
                                          number_cols_plc_summary - 2, {"type": "no_blanks", "format": grand_fmt})
+            """
+
+            ## added by Gaurav - grand total formatting for summary table -- start
+
+            worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 1,
+                                         9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
+                                         3, {"type": "no_blanks", "format": format_grand_total})
+            worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 6,
+                                         9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
+                                         6, {"type": "no_blanks", "format": format_grand_total})
+            worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 8,
+                                         9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
+                                         8, {"type": "no_blanks", "format": format_grand_total})
+
+            worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 5,
+                                         9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
+                                         5, {"type": "no_blanks", "format": grand_fmt})
+            worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 7,
+                                         9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
+                                         8, {"type": "no_blanks", "format": grand_fmt})
+            worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4, 12,
+                                         9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
+                                         12, {"type": "no_blanks", "format": grand_fmt})
+
+            ## added by Gaurav -- end
 
             worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
                                          number_cols_plc_summary - 1,
@@ -1268,11 +1326,31 @@ Class for VDX Placements
                                          self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3 - 4,
                                          number_cols_adsize - 1, {"type": "no_blanks", "format": ats_format})
 
+            ## Format table contents here
+
+            # format summary table
+            """
             for col in range(2, number_cols_plc_summary - 1):
                 start_plc_row = 10
                 end_plc_row = 9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 6
                 worksheet.conditional_format(start_plc_row, col, end_plc_row, col,
-                                             {"type": "no_blanks", "format": percent_fmt})
+                                             {"type": "no_blanks", "format": format_num})
+            """
+
+            ## added by Gaurav - start
+            for col in range(2, number_cols_plc_summary - 1):
+                start_plc_row = 10
+                end_plc_row = 9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 6
+
+                if col == 2 or col == 3 or col == 5 or col == 8:
+                    worksheet.conditional_format(start_plc_row, col, end_plc_row, col,
+                                                 {"type": "no_blanks", "format": format_num})
+                else:
+                    worksheet.conditional_format(start_plc_row, col, end_plc_row, col,
+                                                 {"type": "no_blanks", "format": percent_fmt})
+
+            ## added by Gaurav - end
+
 
             for col in range(2, number_cols_adsize - 1):
                 start_adsize_row = 9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 4
