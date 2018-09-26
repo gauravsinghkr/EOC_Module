@@ -279,8 +279,37 @@ Class for VDX Placements
 
             placement_adsize_group = placement_adsize_grouping_new.loc[:, :]
 
+
+            ## added by Gaurav - start (Added Clickthrough and Video Completions into the list)
+
+            mask9 = placement_adsize_group["COST_TYPE"].isin(["CPE+"])
+            mask10 = placement_adsize_group["COST_TYPE"].isin(["CPE", "CPM", "CPCV"])
+            mask11 = placement_adsize_group["COST_TYPE"].isin(["CPE", "CPM", "CPCV", "CPE+"])
+            mask12 = placement_adsize_group["ADSIZE"].isin(["1x10"])
+            mask13 = placement_adsize_group["COST_TYPE"].isin(["CPE", "CPE+", "CPM"])
+            mask14 = placement_adsize_group["COST_TYPE"].isin(["CPCV"])
+            mask15 = ~placement_adsize_group["ADSIZE"].isin(["1x10"])
+            mask16 = placement_adsize_group["COST_TYPE"].isin(["CPE", "CPM"])
+
+            placement_adsize_group['Clickthroughs'] = np.select([mask12, mask10 & mask15, mask9 & mask15],
+                                                           [placement_adsize_group['VWRCLICKTHROUGHS'],
+                                                            placement_adsize_group["ENGCLICKTHROUGHS"],
+                                                            placement_adsize_group["DPECLICKTHROUGHS"]], default=0)
+
+            placement_adsize_group['Video Completions'] = np.select([mask10 & mask15, mask15 & mask9, mask14 & mask11,
+                                                                mask12 & mask13, mask12 & mask14],
+                                                               [placement_adsize_group['ENG100'],
+                                                                placement_adsize_group['DPE100'],
+                                                                placement_adsize_group['COMPLETIONS'],
+                                                                placement_adsize_group['VIEW100'],
+                                                                placement_adsize_group['COMPLETIONS']
+                                                                ])
+            ## added by Gaurav - end
+
+
             placement_adsize_group = placement_adsize_group.append(placement_adsize_group.sum(numeric_only=True),
                                                                    ignore_index=True)
+
 
             placement_adsize_group["COST_TYPE"] = placement_adsize_group["COST_TYPE"].fillna('CPE')
             placement_adsize_group["ADSIZE"] = placement_adsize_group["ADSIZE"].fillna('Grand Total')
@@ -391,9 +420,9 @@ Class for VDX Placements
                 placement_adsize_group_first_new.index[-1], ["Viewer VCR", "Engager VCR"]] = \
                 np.nan
 
-            placement_adsize_final = placement_adsize_group_first_new.loc[:, ["Placement# Name", "ADSIZE",
-                                                                              "Engagements Rate", "Viewer CTR",
-                                                                              "Engager CTR", "Viewer VCR",
+            placement_adsize_final = placement_adsize_group_first_new.loc[:, ["Placement# Name", "ADSIZE", "IMPRESSIONS", "ENGAGEMENTS",
+                                                                              "Engagements Rate", "Clickthroughs", "Viewer CTR",
+                                                                              "Engager CTR", "Video Completions", "Viewer VCR",
                                                                               "Engager VCR", "Interaction Rate",
                                                                               "Active Time Spent"]]
 
@@ -858,9 +887,9 @@ Class for VDX Placements
                     write_adsize = adsize_df.to_excel(self.config.writer,
                                                       sheet_name="VDX Details".format(self.config.ioid),
                                                       startcol=1, startrow=startline_adsize,
-                                                      columns=["ADSIZE", "Engagements Rate",
-                                                               "Viewer CTR", "Engager CTR",
-                                                               "Viewer VCR", "Engager VCR",
+                                                      columns=["ADSIZE", "IMPRESSIONS", "ENGAGEMENTS", "Engagements Rate",
+                                                               "Clickthroughs", "Viewer CTR", "Engager CTR",
+                                                               "Video Completions", "Viewer VCR", "Engager VCR",
                                                                "Interaction Rate", "Active Time Spent"],
                                                       header=False, index=False)
 
@@ -1067,6 +1096,8 @@ Class for VDX Placements
             ats_format = workbook.add_format({"bg_color": '#A5A5A5', "bold": True})
 
 
+            ## code added by Gaurav -- start (for Imp, Eng, Vd Completions)
+
             worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1, 1,
                                    "Ad Size Breakdown",
                                    format_hearder_left)
@@ -1074,34 +1105,46 @@ Class for VDX Placements
                                    "Ad Size",
                                    format_hearder_left)
             worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 2,
-                                   "Engagement Rate",
+                                   "Impressions",
                                    format_hearder_right)
             worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 3,
-                                   "Viewer CTR",
+                                   "Engagements",
                                    format_hearder_right)
             worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 4,
-                                   "Engager CTR",
+                                   "Engagement Rate",
                                    format_hearder_right)
             worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 5,
+                                   "Clickthoughs",
+                                   format_hearder_right)
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 6,
+                                   "Viewer CTR",
+                                   format_hearder_right)
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 7,
+                                   "Engager CTR",
+                                   format_hearder_right)
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 8,
+                                   "Video Completions",
+                                   format_hearder_right)
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 9,
                                    "Viewer VCR (Primary Video)",
                                    format_hearder_right)
-
-            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 6,
-                                   "Engager VCR (Primary Video)", format_hearder_right)
-
-            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 7,
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 10,
+                                   "Engager VCR (Primary Video)",
+                                   format_hearder_right)
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 11,
                                    "Interaction Rate",
                                    format_hearder_right)
-
-            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 8,
+            worksheet.write_string(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 2, 12,
                                    "Active Time Spent", format_hearder_right)
+
+            ## code added by Gaurav -- end
+
 
             worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1, 1,
                                          9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1,
                                          number_cols_adsize - 1, {
                                              "type": "blanks",
-                                             "format": format_colour
-                                         })
+                                             "format": format_colour})
 
             worksheet.write_string(9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 +
                                    self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3,
@@ -1320,9 +1363,33 @@ Class for VDX Placements
             worksheet.conditional_format(9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
                                          9, 9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 1 - 4,
                                          10, {"type": "blanks", "format": grand_fmt})
-            ## added by Gaurav -- end
 
 
+            # ad-size grand total formatting -- Gaurav
+            startRow = 9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 + \
+                       self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3 - 4
+
+            worksheet.conditional_format(startRow, 1, startRow, 3,
+                                         {"type": "no_blanks", "format": format_grand_total})
+            worksheet.conditional_format(startRow, 5, startRow, 5,
+                                         {"type": "no_blanks", "format": format_grand_total})
+            worksheet.conditional_format(startRow, 8, startRow, 8,
+                                         {"type": "no_blanks", "format": format_grand_total})
+            worksheet.conditional_format(startRow, 12, startRow, 12,
+                                         {"type": "no_blanks", "format": ats_format})
+
+            worksheet.conditional_format(startRow, 4, startRow, 4,
+                                         {"type": "no_blanks", "format": grand_fmt})
+            worksheet.conditional_format(startRow, 6, startRow, 7,
+                                         {"type": "no_blanks", "format": grand_fmt})
+            worksheet.conditional_format(startRow, 11, startRow, 11,
+                                         {"type": "no_blanks", "format": grand_fmt})
+
+            worksheet.conditional_format(startRow, 9, startRow, 10,
+                                         {"type": "blanks", "format": grand_fmt})
+
+            ##
+            """
             worksheet.conditional_format(9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 +
                                          self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3 - 4, 1,
                                          9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 +
@@ -1342,6 +1409,11 @@ Class for VDX Placements
                                          9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 +
                                          self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3 - 4,
                                          number_cols_adsize - 1, {"type": "no_blanks", "format": ats_format})
+
+            """
+            ## added by Gaurav -- end
+
+
 
             ## Format table contents here
 
@@ -1366,15 +1438,23 @@ Class for VDX Placements
                     worksheet.conditional_format(start_plc_row, col, end_plc_row, col,
                                                  {"type": "no_blanks", "format": percent_fmt})
 
-            ## added by Gaurav - end
 
 
             for col in range(2, number_cols_adsize - 1):
                 start_adsize_row = 9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 4
                 end_adsize_row = 9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 + \
                                  self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3 - 6
-                worksheet.conditional_format(start_adsize_row, col, end_adsize_row, col,
-                                             {"type": "no_blanks", "format": percent_fmt})
+
+                if col == 2 or col == 3 or col == 5 or col == 8:
+                    worksheet.conditional_format(start_adsize_row, col, end_adsize_row, col,
+                                                 {"type": "no_blanks", "format": format_num})
+                else:
+                    worksheet.conditional_format(start_adsize_row, col, end_adsize_row, col,
+                                                 {"type": "no_blanks", "format": percent_fmt})
+
+            ## added by Gaurav - end
+
+
 
             for col in range(3, number_cols_video - 1):
                 start_video_row = 9 + len(self.placement_summary_final) + self.unique_plc_summary * 2 + 3 + len(
