@@ -72,6 +72,34 @@ Class for VDX Placements
                                                                   "DPEINTRACTIVEENGAGEMENTS",
                                                                   "VIEW100", "ENG100", "DPE100"]]
 
+            ## added by Gaurav - start (Added Clickthrough and Video Completions into the list)
+
+            mask1 = summary_placement["COST_TYPE"].isin(['CPE+'])
+            mask2 = summary_placement["COST_TYPE"].isin(['CPE', 'CPM', 'CPCV'])
+            mask3 = summary_placement["COST_TYPE"].isin(['CPE+', 'CPE', 'CPM', 'CPCV'])
+            mask_vdx_first = summary_placement["COST_TYPE"].isin(['CPCV'])
+            mask4 = summary_placement["PRODUCT"].isin(['InStream'])
+            mask_vdx_first_vwr_vcr = summary_placement["COST_TYPE"].isin(['CPE+', 'CPE', 'CPM'])
+            mask5 = summary_placement["PRODUCT"].isin(['Display', 'Mobile'])
+            mask6 = summary_placement['COST_TYPE'].isin(['CPM', 'CPE'])
+            mask7 = summary_placement["COST_TYPE"].isin(['CPE+'])
+            mask8 = summary_placement["COST_TYPE"].isin(['CPCV'])
+
+
+            summary_placement['Clickthroughs'] = np.select([mask4, mask2 & mask5, mask1 & mask5],
+                                                                         [summary_placement['VWRCLICKTHROUGH'],
+                                                                          summary_placement["ENGCLICKTHROUGH"],
+                                                                          summary_placement["DPECLICKTHROUGH"]], default=0)
+
+            summary_placement['Video Completions'] = np.select([mask5 & mask6, mask5 & mask7, mask5 & mask8,
+                                                                              mask4 & mask_vdx_first_vwr_vcr, mask4 & mask_vdx_first],
+                                                                             [summary_placement['ENG100'],
+                                                                              summary_placement['DPE100'],
+                                                                              summary_placement['COMPLETIONS'],
+                                                                              summary_placement['VIEW100'],
+                                                                              summary_placement['COMPLETIONS']
+                                                                              ])
+            ## added by Gaurav - end
 
             placement_vdx_summary_first = summary_placement.append(summary_placement.sum(numeric_only=True),
                                                                    ignore_index=True)
@@ -185,25 +213,7 @@ Class for VDX Placements
                 placement_vdx_summary_first_new.index[-1], ["Viewer VCR", "Engager VCR"]] = np.nan
 
 
-            """ Below code is added/edited by Gaurav on 09/24/2018 to add metrics --
-            Impressions, Engagements, Clickthroughs, Video Completions
-            """
-
-            ## edited by Gaurav - start
-
-            placement_vdx_summary_first_new['Clickthroughs'] = np.select([mask4, mask2 & mask5, mask1 & mask5],
-                                                                         [placement_vdx_summary_first['VWRCLICKTHROUGH'],
-                                                                         placement_vdx_summary_first["ENGCLICKTHROUGH"],
-                                                                         placement_vdx_summary_first["DPECLICKTHROUGH"]], default=0)
-
-            placement_vdx_summary_first_new['Video Completions'] = np.select([mask5 & mask6, mask5 & mask7, mask5 & mask8,
-                                                                              mask4 & mask_vdx_first_vwr_vcr, mask4 & mask_vdx_first],
-                                                                             [placement_vdx_summary_first['ENG100'],
-                                                                              placement_vdx_summary_first['DPE100'],
-                                                                              placement_vdx_summary_first['COMPLETIONS'],
-                                                                              placement_vdx_summary_first['VIEW100'],
-                                                                              placement_vdx_summary_first['COMPLETIONS']
-                                                                             ])
+            ## edited by Gaurav - start (Added Clickthrough and Video Completions into the list)
 
             placement_summary_final_new = placement_vdx_summary_first_new.loc[:,
                                           ["Placement# Name", "PRODUCT", "IMPRESSIONS", "ENGAGEMENTS", "Engagements Rate", "Clickthroughs",
@@ -756,13 +766,6 @@ Class for VDX Placements
 
         """
 
-        ## added by Gaurav -- to add sum formula at grand total -- start
-
-
-
-
-        ## added by Gaurav -- end
-
         unique_plc_summary = self.placement_summary_final['Placement# Name'].nunique()
         self.unique_plc_summary = unique_plc_summary
 
@@ -793,8 +796,10 @@ Class for VDX Placements
             self.logger.error(str(e))
             pass
 
+
         startline_placement = 9
         try:
+
             if self.sqlscript.read_sql__v_d_x_mv.empty:
                 pass
             else:
@@ -827,7 +832,6 @@ Class for VDX Placements
 
 
                     startline_placement += len(placement_df) + 1
-
 
 
         except (AttributeError, KeyError, TypeError, IOError, ValueError) as e:
@@ -1174,9 +1178,9 @@ Class for VDX Placements
                                    format_hearder_right)
 
             # Colour Formatting for Interaction Table
-            print(9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1)
-            print(self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 3)
-            print(self.placement_by_video_final.shape[0] + self.unique_plc_summary * 2 + 2)
+            #print(9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1)
+            #print(self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 3)
+            #print(self.placement_by_video_final.shape[0] + self.unique_plc_summary * 2 + 2)
 
             start_row_intraction = 9 + self.placement_summary_final.shape[0] + self.unique_plc_summary * 2 + 1 + \
                                    self.placement_adsize_final.shape[0] + self.unique_plc_summary * 2 + 3 + \
