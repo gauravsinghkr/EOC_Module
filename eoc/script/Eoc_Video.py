@@ -1593,6 +1593,8 @@ Class for VDX Placements
         else:
             self.logger.info("Live VDX placements found for IO - {}".format(self.config.ioid) + " at " + str(
                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+            self.logger.info("Added Clickthroughs and Video Completion for IO (Gaurav) - {}".format(self.config.ioid))
+
             self.access_vdx_placement_columns()
             self.access_vdx_adsize_columns()
             self.vdx_video_details()
