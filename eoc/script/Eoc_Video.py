@@ -57,6 +57,7 @@ Class for VDX Placements
                                          "ENGINTRACTIVEENGAGEMENTS", "DPEINTRACTIVEENGAGEMENTS",
                                          "VIEW100", "ENG100", "DPE100"]]
 
+
             placement_vdx_summary_new["Placement# Name"] = placement_vdx_summary_new[["PLACEMENT#",
                                                                                       "PLACEMENT_NAME"]].apply(
                 lambda x: ".".join(x),

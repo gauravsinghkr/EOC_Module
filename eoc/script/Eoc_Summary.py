@@ -118,6 +118,7 @@ class Summary(object):
             pass
         else:
             vdx_merge_data = [self.sqlscript.read_sql__v_d_x, self.sqlscript.read_sql__v_d_x_placement]
+            print(vdx_merge_data)
 
             vdx_second_summary = reduce(lambda left, right: pd.merge(left, right, on='PLACEMENT#'),vdx_merge_data)
 
