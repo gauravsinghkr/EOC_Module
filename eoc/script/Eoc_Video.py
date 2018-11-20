@@ -229,7 +229,9 @@ Class for VDX Placements
 
             ## edited by Gaurav - end
 
+
             self.placement_summary_final = placement_summary_final
+
 
     def access_vdx_adsize_columns(self):
 
@@ -582,6 +584,7 @@ Class for VDX Placements
 
             self.placement_by_video_final = placement_by_video_final
 
+
     def vdx_player_interaction(self):
         """Vdx Player Interaction"""
 
@@ -795,6 +798,13 @@ Class for VDX Placements
         Writing Video Data
 
         """
+        workbook = self.config.writer.book
+        worksheet = self.config.writer.sheets["VDX Details"]
+        format_bold_sum = workbook.add_format({"bold": True, "num_format": "#,##0"})
+        format_num = workbook.add_format({"num_format": "#,##0"})
+        format_percent = workbook.add_format({"num_format": "0.00%"})
+        format_bold_row = workbook.add_format({"bold": True})
+        format_bold_percent = workbook.add_format({"bold": True, "num_format": "0.00%"})
 
         unique_plc_summary = self.placement_summary_final['Placement# Name'].nunique()
         self.unique_plc_summary = unique_plc_summary
@@ -861,7 +871,9 @@ Class for VDX Placements
                                                       header=False, index=False)
 
 
+
                     startline_placement += len(placement_df) + 1
+
 
 
         except (AttributeError, KeyError, TypeError, IOError, ValueError) as e:
